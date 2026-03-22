@@ -1,0 +1,7 @@
+Siparis_ID,Urun,Cikis_Noktasi,Varis_Noktasi,Miktar,Durum,Teslimat_Suresi_Gun
+TRK001,Polimer,İstanbul,Rotterdam,500,Teslim Edildi,5
+TRK002,Plastik Hammadde,İzmir,Hamburg,300,Gecikmede,8
+TRK003,Kimyasal Çözücü,Kocaeli,Barselona,150,Yolda,4
+TRK004,Polimer,Mersin,Marsilya,600,Teslim Edildi,6
+TRK005,Plastik Hammadde,İstanbul,Cenova,400,Yolda,3
+TRK006,Kimyasal Çözücü,İzmir,Valensiya,250,Gecikmede,4
