@@ -17,12 +17,12 @@ KOORDINATLAR = {
     'Barselona': (41.3851, 2.1734), 'Marsilya': (43.2965, 5.3698)
 }
 
-# VERİTABANI VE TABLO HAZIRLAMA (Daha acemi bir yapı)
+# VERİTABANI VE TABLO HAZIRLAMA 
 
 
-# 1. Veritabanı var mı kontrol et (Daha dolambaçlı bir yol)
+# 1. Veritabanı var mı kontrol et 
 if not os.path.exists(DB_NAME):
-    # Veritabanına bağlan (dosyayı oluştur)
+    # Veritabanına bağlan dosya olustur.
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
     
@@ -34,7 +34,7 @@ if not os.path.exists(DB_NAME):
         )
     ''')
     
-    # Örnek verileri ekle (executemany yerine tek tek ekleyerek uzatıyoruz)
+    # Örnek verileri ekle 
     c.execute("INSERT INTO kargolar VALUES ('TRK001', 'Polimer', 'İstanbul', 'Rotterdam', 500, 'Teslim Edildi', 5)")
     c.execute("INSERT INTO kargolar VALUES ('TRK002', 'Plastik Hammadde', 'İzmir', 'Hamburg', 300, 'Gecikmede', 8)")
     c.execute("INSERT INTO kargolar VALUES ('TRK003', 'Kimyasal Çözücü', 'Kocaeli', 'Barselona', 150, 'Yolda', 4)")
@@ -43,21 +43,21 @@ if not os.path.exists(DB_NAME):
     conn.commit()
     conn.close()
 
-# 2. Verileri getirme (Pandas dataframe_to_sql kullanmak yerine manuel dataframe oluşturma)
+# 2. Verileri getir
 conn = sqlite3.connect(DB_NAME)
 c = conn.cursor()
 c.execute("SELECT * FROM kargolar")
 veriler = c.fetchall()
-# Pandas'ın SQL okuma özelliğini kullanmak yerine manuel tablo yapıyoruz (x=x+2 mantığı)
+# tablo
 df = pd.DataFrame(veriler, columns=['Siparis_ID', 'Urun', 'Cikis_Noktasi', 'Varis_Noktasi', 'Miktar', 'Durum', 'Teslimat_Suresi_Gun'])
 conn.close()
 
 # ==========================================
-# SOL MENÜ (SIDEBAR) - Filtreleme (Daha uğraştırıcı mantık)
+# SOL MENÜ  - Filtreleme 
 # ==========================================
 st.sidebar.header("🔍 Filtreleme")
 
-# Benzersiz durum listesini oluşturmak için manuel döngü (x=x+2 mantığı)
+# Benzersiz durum listesini oluşturmak için döngü 
 durum_listesi_ham = df["Durum"].tolist()
 unique_durumlar = []
 for durum in durum_listesi_ham:
@@ -70,13 +70,13 @@ secilen_durumlar = st.sidebar.multiselect(
     default=unique_durumlar
 )
 
-# Filtrelemeyi manuel yapalım (isin kullanmak yerine x=x+2 mantığı)
-# Original DataFrame'i alıp, yeni bir DataFrame'e satır satır eklemece
+# Filtreleme
+# Original DataFrame'i alıp, yeni bir DataFrame'e ekle
 filtrelenmis_veriler_listesi = []
 for index, row in df.iterrows():
     if row['Durum'] in secilen_durumlar:
         filtrelenmis_veriler_listesi.append(row)
-# Eğer hiç filtre seçilmezse hata vermemesi için kontrol
+# Eğer hiç filtre seçilmezse hata vermemesi için kontrol et
 if filtrelenmis_veriler_listesi:
     df_filtrelenmis = pd.DataFrame(filtrelenmis_veriler_listesi)
 else:
@@ -84,19 +84,19 @@ else:
     df_filtrelenmis = pd.DataFrame(columns=df.columns)
 
 # ==========================================
-# SOL MENÜ (SIDEBAR) - Veri Yönetimi (Gerçek SQL, Tekrarlı Bağlantı)
+# SOL MENÜ  - Veri Yönetimi 
 # ==========================================
 st.sidebar.markdown("---")
 st.sidebar.header("⚙️ Veri Yönetimi")
 
-# Şehir listesini manuel oluşturma
+# Şehir listesini oluştur
 bilinen_sehirler = []
 for sehir in KOORDINATLAR.keys():
     bilinen_sehirler.append(sehir)
 
 # 1. YENİ KAYIT EKLEME
 with st.sidebar.expander("➕ Yeni Kayıt Ekle"):
-    # Form kullanmak yerine tek tek inputları alalım (clear_on_submit olmadan daha uğraştırıcı)
+    # İnputları al
     yeni_id = st.text_input("Sipariş ID (Örn: TRK007)")
     yeni_urun = st.text_input("Ürün Adı")
     yeni_cikis = st.selectbox("Çıkış Noktası", bilinen_sehirler)
@@ -105,11 +105,11 @@ with st.sidebar.expander("➕ Yeni Kayıt Ekle"):
     yeni_durum = st.selectbox("Durum", ["Yolda", "Teslim Edildi", "Gecikmede", "İptal"])
     yeni_sure = st.number_input("Teslimat Süresi (Gün)", min_value=0, step=1)
     
-    # Form submit butonu yerine düz buton (clear mantığı olmadığı için stajyer işi)
+    # buton 
     if st.sidebar.button("Veriyi Veritabanına Kaydet"):
         if yeni_id == "" or yeni_urun == "":
             st.error("ID ve Ürün boş olamaz!")
-        # ID kontrolü manuel döngüyle
+        # ID kontrolü 
         id_var_mi = False
         for m_id in df["Siparis_ID"].tolist():
             if yeni_id == m_id:
@@ -119,7 +119,7 @@ with st.sidebar.expander("➕ Yeni Kayıt Ekle"):
         if id_var_mi:
             st.error("Bu ID mevcut!")
         else:
-            # Bağlantıyı her seferinde tek tek yap (Repeatable Connection - Acemi İşi)
+            # Bağlantı olustur
             conn_ekle = sqlite3.connect(DB_NAME)
             c_ekle = conn_ekle.cursor()
             c_ekle.execute("INSERT INTO kargolar VALUES (?,?,?,?,?,?,?)", 
@@ -131,14 +131,14 @@ with st.sidebar.expander("➕ Yeni Kayıt Ekle"):
 
 # 2. KAYIT GÜNCELLEME
 with st.sidebar.expander("🔄 Durum Güncelle"):
-    # Mevcut ID'leri manuel oluşturma
+    # Mevcut ID'leri olustur
     mevcut_idler = df["Siparis_ID"].tolist()
     guncellenecek_id = st.selectbox("Güncellenecek Sipariş ID", mevcut_idler if mevcut_idler else [])
     yeni_durum_guncel = st.selectbox("Yeni Durumu Seçin", ["Yolda", "Teslim Edildi", "Gecikmede", "İptal"])
     
     if st.sidebar.button("Durumu Güncelle"):
         if guncellenecek_id:
-            # Yine tekrarlı bağlantı
+            # Bağlantı olustur
             conn_guncel = sqlite3.connect(DB_NAME)
             c_guncel = conn_guncel.cursor()
             c_guncel.execute("UPDATE kargolar SET Durum=? WHERE Siparis_ID=?", (yeni_durum_guncel, guncellenecek_id))
@@ -153,7 +153,7 @@ with st.sidebar.expander("❌ Kayıt Sil"):
     
     if st.sidebar.button("Siparişi Sil"):
         if silinecek_id:
-            # Tekrarlı bağlantı
+            # Baglantı olustur
             conn_sil = sqlite3.connect(DB_NAME)
             c_sil = conn_sil.cursor()
             c_sil.execute("DELETE FROM kargolar WHERE Siparis_ID=?", (silinecek_id,))
@@ -162,12 +162,11 @@ with st.sidebar.expander("❌ Kayıt Sil"):
             st.success("Silindi!")
             st.rerun()
 
-# ==========================================
 # ANA SAYFA GÖRÜNÜMÜ
-# ==========================================
+
 st.title("🌍 Küresel Tedarik Zinciri Veri Analizi")
 
-# --- İş Mantığı: Geciken Sipariş Kontrolü (Döngüyle manuel sayma - x=x+2 mantığı) ---
+# --- Geciken Sipariş Kontrolü  ---
 geciken_sayisi_manuel = 0
 for durum_kontol in df_filtrelenmis["Durum"].tolist():
     if durum_kontol == 'Gecikmede':
@@ -178,20 +177,20 @@ if geciken_sayisi_manuel > 0:
 else:
     st.success("✅ Gecikmede olan sipariş yok.")
 
-# --- Metrikler (Düzayak) ---
+# --- Metrikler  ---
 st.markdown("### 📊 Genel Özet")
 col1, col2, col3 = st.columns(3)
 
 # Toplam Sipariş
 col1.metric("Toplam Sipariş", len(df_filtrelenmis))
 
-# Toplam Miktar (Manuel döngüyle toplama - x=x+2 mantığı)
+# Toplam Miktar 
 toplam_miktar_manuel = 0
 for miktar_kontol in df_filtrelenmis["Miktar"].tolist():
     toplam_miktar_manuel += miktar_kontol
 col2.metric("Toplam Miktar", toplam_miktar_manuel)
 
-# Ortalama Süre (Manuel toplam ve bölme - x=x+2 mantığı)
+# Ortalama Süre 
 toplam_sure_manuel = 0
 if not df_filtrelenmis.empty:
     for sure_kontol in df_filtrelenmis["Teslimat_Suresi_Gun"].tolist():
@@ -203,11 +202,11 @@ col3.metric("Ortalama Süre", f"{ortalama_sure_manuel:.1f} Gün")
 
 st.markdown("---")
 
-# --- Harita (Düzayak) ---
+# --- Harita  ---
 st.subheader("🗺️ Küresel Lojistik Haritası")
 if not df_filtrelenmis.empty:
     harita_verisi_manuel = []
-    # Manuel döngü
+    #  döngü
     for index, row in df_filtrelenmis.iterrows():
         cikis = row['Cikis_Noktasi']
         varis = row['Varis_Noktasi']
@@ -230,31 +229,28 @@ if not df_filtrelenmis.empty:
         st.plotly_chart(fig_harita, use_container_width=True)
 st.markdown("---")
 
-# --- Grafikler (Düzayak) ---
+# --- Grafikler  ---
 col_grafik1, col_grafik2 = st.columns(2)
 with col_grafik1:
     st.subheader("Kargo Durumları")
-    # Pasta grafiği (Donut yerine tam pasta - acemi tercihi)
+    # Pasta grafiği 
     if not df_filtrelenmis.empty:
-        fig_durum = px.pie(df_filtrelenmis, names="Durum", hole=0) # hole=0 ile donut olmadı
+        fig_durum = px.pie(df_filtrelenmis, names="Durum", hole=0) # hole=0'la donut grafigi olmadı
         st.plotly_chart(fig_durum, use_container_width=True)
 
 with col_grafik2:
     st.subheader("Ürün Miktarları")
-    # Sütun grafiği (Ürün bazında renklendirmeden, düz renk)
+    # Sütun grafigi
     if not df_filtrelenmis.empty:
         fig_miktar = px.bar(df_filtrelenmis, x="Urun", y="Miktar") # color="Urun" sildik
         st.plotly_chart(fig_miktar, use_container_width=True)
 
 st.markdown("---")
 
-# ==========================================
-# GÜNCELLENEN KISIM: KESİN OKUNABİLİR RENKLER
-# ==========================================
+
 def tablo_renklendir_acemi(row):
-    """Tablodaki satırların durumuna göre arka plan ve yazı rengini belirler."""
     
-    # Gecikmede ise: Arka plan açık kırmızı/pembe, YAZI RENGİ SİYAH ve KALIN
+    # Gecikmedeyse  : Arka plan açık kırmızı/pembe, yazi rengi siyah ve kalin
     if row['Durum'] == 'Gecikmede':
         return ['background-color: #ffcdd2; color: #000000; font-weight: bold;'] * 7
         
@@ -262,15 +258,13 @@ def tablo_renklendir_acemi(row):
     elif row['Durum'] == 'Teslim Edildi':
         return ['background-color: #c8e6c9; color: #000000; font-weight: bold;'] * 7
         
-    # Diğer durumlarda (Yolda vb.) dokunma
+    # Diğer durumlarda  dokunma
     else:
         return [''] * 7
 
 # --- Detaylı Veri Tablosu ---
 st.subheader("📦 Detaylı Veri Tablosu")
 if not df_filtrelenmis.empty:
-    # Pandas style özelliğini doğrudan uygulayalım
+    # Pandas style özelliği
     renkli_tablo_acemi = df_filtrelenmis.style.apply(tablo_renklendir_acemi, axis=1)
     st.dataframe(renkli_tablo_acemi, use_container_width=True)
-
-# Mühendisin 'Signature' satırı (if __name__ == "__main__":) sildik, stajyer doğrudan yazar!
